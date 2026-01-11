@@ -51,8 +51,12 @@ char *ft_substr(char const *s, unsigned int start, size_t len) {
   size_t maxlen;
 
   maxlen = ft_strlen(s);
-  if (start >= maxlen)
-    return (ft_substr(s, 0, ft_strlen(s)));
+  if (start >= maxlen) {
+    b = malloc(1);
+    if (b)
+      *b = '\0';
+    return (b);
+  }
   if (start + len > maxlen)
     len = maxlen - start;
   b = malloc(len + 1);
@@ -78,6 +82,7 @@ char *fill_stash(int fd, char *stash) {
     b_read = read(fd, buf, BUFFER_SIZE);
     if (b_read == -1) {
       free(buf);
+      free(stash);
       return NULL;
     }
     buf[b_read] = '\0';
@@ -98,18 +103,15 @@ char *get_line(char *stash) {
     len = (nl - stash) + 1;
   return ft_substr(stash, 0, len);
 }
+
 char *update_stash(char *stash) {
   char *nl = ft_strchr(stash, '\n');
   if (!nl) {
     free(stash);
     return NULL;
   }
-  char *new = ft_substr(nl + 1, 0, ft_strlen(nl + 1));
+  char *new = ft_substr(stash, (nl - stash) + 1, ft_strlen(nl + 1));
   free(stash);
-  if (new && !*new) {
-    free(new);
-    return NULL;
-  }
   return new;
 }
 
@@ -120,14 +122,24 @@ char *get_next_line(int fd) {
   stash = fill_stash(fd, stash);
   if (!stash)
     return NULL;
+  if (!*stash) {
+    free(stash);
+    stash = NULL;
+    return (NULL);
+  }
   char *line = get_line(stash);
   stash = update_stash(stash);
   return line;
 }
 
+#include <stdio.h>
 int main() {
   int fd = open("testfile", O_RDONLY);
-  char *s = get_next_line(fd);
+  char *s;
+  while ((s = get_next_line(fd)))
+    printf("line: %s", s);
+
+  // char *s = get_next_line(fd);
   close(fd);
   return 0;
 }
