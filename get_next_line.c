@@ -15,6 +15,16 @@ void *ft_memcpy(void *dest, const void *src, size_t n) {
   return (dest);
 }
 
+char *ft_strncpy(char *dest, const char *src, size_t size) {
+  size_t i = 0;
+  while (i < size && src[i]) {
+    dest[i] = src[i];
+    i++;
+  }
+  dest[i] = '\0';
+  return dest;
+}
+
 size_t ft_strlen(const char *s) {
   const char *p = s;
 
@@ -23,7 +33,22 @@ size_t ft_strlen(const char *s) {
   return (p - s);
 }
 
-char *ft_strjoin(char const *s1, char const *s2) {
+char *ft_strchrnul(const char *s, int c) {
+  while (*s && *s != c)
+    s++;
+  return ((char *)s);
+}
+
+char *ft_substr(char const *s, size_t len) {
+  char *str = malloc(len + 1);
+  if (!str)
+    return NULL;
+  ft_memcpy(str, s, len);
+  str[len] = '\0';
+  return str;
+}
+
+char *ft_strjoin_free(char *s1, char *s2) {
   size_t s1_len;
   size_t s2_len;
   char *b;
@@ -35,111 +60,84 @@ char *ft_strjoin(char const *s1, char const *s2) {
     return (NULL);
   ft_memcpy(b, s1, s1_len);
   ft_memcpy(b + s1_len, s2, s2_len + 1);
+  free(s1);
+  free(s2);
   return (b);
-}
-
-char *ft_strchr(const char *s, int c) {
-  while (*s && *s != (char)c)
-    s++;
-  if (c && !*s)
-    return (0);
-  return ((char *)s);
-}
-
-char *ft_substr(char const *s, unsigned int start, size_t len) {
-  char *b;
-  size_t maxlen;
-
-  maxlen = ft_strlen(s);
-  if (start >= maxlen) {
-    b = malloc(1);
-    if (b)
-      *b = '\0';
-    return (b);
-  }
-  if (start + len > maxlen)
-    len = maxlen - start;
-  b = malloc(len + 1);
-  if (!b)
-    return (NULL);
-  ft_memcpy(b, s + start, len);
-  b[len] = '\0';
-  return (b);
-}
-
-// abcdef$abcdef
-
-char *fill_stash(int fd, char *stash) {
-  char *buf = malloc(BUFFER_SIZE + 1);
-  if (!buf)
-    return NULL;
-  if (!stash) {
-    stash = malloc(1);
-    stash[0] = '\0';
-  }
-  ssize_t b_read = 1;
-  while (!ft_strchr(stash, '\n') && b_read != 0) {
-    b_read = read(fd, buf, BUFFER_SIZE);
-    if (b_read == -1) {
-      free(buf);
-      free(stash);
-      return NULL;
-    }
-    buf[b_read] = '\0';
-    char *tmp = ft_strjoin(stash, buf);
-    free(stash);
-    stash = tmp;
-  }
-  free(buf);
-  return stash;
 }
 
 char *get_line(char *stash) {
-  char *nl = ft_strchr(stash, '\n');
-  size_t len;
-  if (!nl)
-    len = ft_strlen(stash);
-  else
-    len = (nl - stash) + 1;
-  return ft_substr(stash, 0, len);
+  char *nl = ft_strchrnul(stash, '\n');
+  size_t len = nl - stash;
+  if (*nl == '\n')
+    len++;
+  char *buf = malloc(len + 1);
+  if (!buf)
+    return NULL;
+  ft_strncpy(buf, stash, len);
+  return buf;
 }
 
-char *update_stash(char *stash) {
-  char *nl = ft_strchr(stash, '\n');
-  if (!nl) {
-    free(stash);
-    return NULL;
-  }
-  char *new = ft_substr(stash, (nl - stash) + 1, ft_strlen(nl + 1));
-  free(stash);
-  return new;
+void update_stash(char *stash) {
+  char *nl = ft_strchrnul(stash, '\n');
+  if (*nl == '\n')
+    nl++;
+  ft_strncpy(stash, nl, BUFFER_SIZE);
 }
 
 char *get_next_line(int fd) {
-  static char *stash = NULL;
-  if (fd < 0 || BUFFER_SIZE <= 0)
-    return NULL;
-  stash = fill_stash(fd, stash);
-  if (!stash)
-    return NULL;
-  if (!*stash) {
-    free(stash);
-    stash = NULL;
-    return (NULL);
+  static char stash[BUFFER_SIZE + 1];
+  char *line = ft_substr("", 0);
+  ssize_t rd = 0;
+  while (1) {
+    if (!*stash) {
+      rd = read(fd, stash, BUFFER_SIZE);
+      if (rd < 0)
+        return NULL;
+      stash[rd] = '\0';
+    }
+    char *newline = get_line(stash);
+    line = ft_strjoin_free(line, newline);
+    update_stash(stash);
+    if (*ft_strchrnul(line, '\n') == '\n' || rd == 0)
+      break;
   }
-  char *line = get_line(stash);
-  stash = update_stash(stash);
-  return line;
+  if (*line)
+    return line;
+  free(line);
+  return NULL;
 }
+
+// 01234567
+// abc$0000x
+//    3
+// move 3-7
+// abc00000x
+//    3
+// abcdefghx
+//         8
+// move 0-8
 
 #include <stdio.h>
-int main() {
-  int fd = open("testfile", O_RDONLY);
-  char *s;
-  while ((s = get_next_line(fd)))
-    printf("line: %s", s);
+// int main() {
+//   char stash[] = "abcdef\n12345\nabcdefghijklm";
+//   // update_stash(stash);
+//
+//   char *s;
+//   while ((s = g()))
+//     printf("line: %s\n", s);
+//
+//   return 0;
+// }
 
-  // char *s = get_next_line(fd);
-  close(fd);
-  return 0;
-}
+// int main() {
+//   // int fd = open("testfile", O_RDONLY);
+//   // int fd = open("testfile", O_RDONLY);
+//   char *s;
+//   // while ((s = get_next_line(fd)))
+//   while ((s = get_next_line(0)))
+//     printf("line: %s", s);
+//
+//   // char *s = get_next_line(fd);
+//   // close(fd);
+//   return 0;
+// }
