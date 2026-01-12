@@ -1,7 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jcronin <jcronin@student.codam.nl>         +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/12 18:16:55 by jcronin           #+#    #+#             */
+/*   Updated: 2026/01/12 18:19:53 by jcronin          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #pragma once
 
-#ifndef BUFFER_SIZE
-#define BUFFER_SIZE 16
-#endif
-
-char *get_next_line(int fd);
+char	*get_next_line(int fd);
