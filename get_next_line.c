@@ -85,18 +85,28 @@ void update_stash(char *stash) {
 }
 
 char *get_next_line(int fd) {
+  if (fd < 0)
+    return NULL;
   static char stash[BUFFER_SIZE + 1];
   char *line = ft_substr("", 0);
-  ssize_t rd = 0;
+  ssize_t rd = 1;
   while (1) {
     if (!*stash) {
       rd = read(fd, stash, BUFFER_SIZE);
-      if (rd < 0)
+      if (rd < 0) {
+        free(line);
         return NULL;
+      }
       stash[rd] = '\0';
     }
     char *newline = get_line(stash);
+    if (!newline) {
+      free(line);
+      return NULL;
+    }
     line = ft_strjoin_free(line, newline);
+    if (!line)
+      return NULL;
     update_stash(stash);
     if (*ft_strchrnul(line, '\n') == '\n' || rd == 0)
       break;
@@ -130,12 +140,14 @@ char *get_next_line(int fd) {
 // }
 
 // int main() {
-//   // int fd = open("testfile", O_RDONLY);
+//   int fd = open("testfile", O_RDONLY);
 //   // int fd = open("testfile", O_RDONLY);
 //   char *s;
-//   // while ((s = get_next_line(fd)))
-//   while ((s = get_next_line(0)))
+//   // while ((s = get_next_line(0)))
+//   while ((s = get_next_line(fd))) {
 //     printf("line: %s", s);
+//     free(s);
+//   }
 //
 //   // char *s = get_next_line(fd);
 //   // close(fd);
