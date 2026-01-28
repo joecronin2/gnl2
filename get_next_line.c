@@ -12,7 +12,6 @@
 
 #include "get_next_line.h"
 #include "get_next_line_utils.h"
-#include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -111,17 +110,7 @@ char	*get_next_line(int fd)
 }
 
 // #include <stdio.h>
-// int main() {
-//   char stash[] = "abcdef\n12345\nabcdefghijklm";
-//   // update_stash(stash);
-//
-//   char *s;
-//   while ((s = g()))
-//     printf("line: %s\n", s);
-//
-//   return (0);
-// }
-
+// #include <fcntl.h>
 // int main() {
 //   int fd = open("testfile", O_RDONLY);
 //   // int fd = open("testfile", O_RDONLY);
