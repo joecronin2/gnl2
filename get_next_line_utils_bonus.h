@@ -11,3 +11,8 @@
 /* ************************************************************************** */
 
 #pragma once
+
+#include "get_next_line_utils.h"
+#include <stdlib.h>
+
+char	*ft_strjoin_free(char *s1, char *s2);

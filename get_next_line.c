@@ -12,6 +12,7 @@
 
 #include "get_next_line.h"
 #include "get_next_line_utils.h"
+#include "get_next_line_utils_bonus.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -20,28 +21,7 @@
 # define BUFFER_SIZE 16
 #endif
 
-char	*ft_strjoin_free(char *s1, char *s2)
-{
-	size_t	s1_len;
-	size_t	s2_len;
-	char	*b;
-
-	s1_len = ft_strlen(s1);
-	s2_len = ft_strlen(s2);
-	b = malloc(s1_len + s2_len + 1);
-	if (!b)
-	{
-		free(s1);
-		free(s2);
-	}
-	ft_memcpy(b, s1, s1_len);
-	ft_memcpy(b + s1_len, s2, s2_len + 1);
-	free(s1);
-	free(s2);
-	return (b);
-}
-
-char	*get_line(char *stash)
+static char	*get_line(char *stash)
 {
 	char	*nl;
 	size_t	len;
@@ -58,7 +38,7 @@ char	*get_line(char *stash)
 	return (buf);
 }
 
-void	update_stash(char *stash)
+static void	update_stash(char *stash)
 {
 	char	*nl;
 
@@ -68,7 +48,7 @@ void	update_stash(char *stash)
 	ft_strncpy(stash, nl, BUFFER_SIZE);
 }
 
-char	*join(char *line, char *stash)
+static char	*join(char *line, char *stash)
 {
 	char	*newline;
 
@@ -76,52 +56,67 @@ char	*join(char *line, char *stash)
 	if (!newline)
 		return (NULL);
 	line = ft_strjoin_free(line, newline);
+	if (!line)
+		return (NULL);
 	update_stash(stash);
 	return (line);
+}
+
+static ssize_t	read_stash(int fd, char *stash)
+{
+	ssize_t	rd;
+
+	rd = read(fd, stash, BUFFER_SIZE);
+	if (rd > 0)
+		stash[rd] = '\0';
+	return (rd);
 }
 
 char	*get_next_line(int fd)
 {
 	static char	stash[1024][BUFFER_SIZE + 1];
 	char		*line;
+	char		*tmp;
 	ssize_t		rd;
 
-	if (fd < 0)
-		return (NULL);
 	line = ft_substr("", 0);
+	if (fd < 0 || BUFFER_SIZE <= 0 || !line)
+		return (NULL);
 	rd = 1;
-	while (1)
+	while (rd > 0 && *ft_strchrnul(line, '\n') != '\n')
 	{
 		if (!*stash[fd])
-		{
-			rd = read(fd, stash[fd], BUFFER_SIZE);
-			if (rd < 0)
-				return (free(line), NULL);
-			stash[fd][rd] = '\0';
-		}
-		line = join(line, stash[fd]);
-		if (*ft_strchrnul(line, '\n') == '\n' || rd == 0)
+			rd = read_stash(fd, stash[fd]);
+		if (rd == -1)
+			return (free(line), NULL);
+		if (rd == 0)
 			break ;
+		tmp = join(line, stash[fd]);
+		if (!tmp)
+			return (free(line), NULL);
+		line = tmp;
 	}
-	if (*line)
+	if (line && *line && rd != -1)
 		return (line);
-	free(line);
-	return (NULL);
+	return (free(line), NULL);
 }
 
-// #include <stdio.h>
 // #include <fcntl.h>
-// int main() {
-//   int fd = open("testfile", O_RDONLY);
-//   // int fd = open("testfile", O_RDONLY);
-//   char *s;
-//   // while ((s = get_next_line(0)))
-//   while ((s = get_next_line(fd))) {
-//     printf("line: %s", s);
-//     free(s);
-//   }
+// #include <stdio.h>
 //
-//   // char *s = get_next_line(fd);
-//   // close(fd);
-//   return (0);
+// int	main(void)
+// {
+// 	char	*s;
+//
+// 	// int fd = open("testfile", O_RDONLY);
+// 	// int fd = open("testfile", O_RDONLY);
+// 	while ((s = get_next_line(0)))
+// 	{
+// 		// while ((s = get_next_line(fd))) {
+// 		printf("line: %s", s);
+// 		free(s);
+// 	}
+// 	// char *s = get_next_line(fd);
+// 	// close(fd);
+// 	return (0);
 // }
