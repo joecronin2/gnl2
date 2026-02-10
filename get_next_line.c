@@ -12,7 +12,6 @@
 
 #include "get_next_line.h"
 #include "get_next_line_utils.h"
-#include "get_next_line_bonus.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -38,19 +37,32 @@ static char	*get_line(char *stash)
 	return (buf);
 }
 
-static void	update_stash(char *stash)
+static char	*ft_strjoin_free(char *s1, char *s2)
 {
-	char	*nl;
+	size_t	s1_len;
+	size_t	s2_len;
+	char	*b;
 
-	nl = ft_strchrnul(stash, '\n');
-	if (*nl == '\n')
-		nl++;
-	ft_strncpy(stash, nl, BUFFER_SIZE);
+	s1_len = ft_strlen(s1);
+	s2_len = ft_strlen(s2);
+	b = malloc(s1_len + s2_len + 1);
+	if (!b)
+	{
+		free(s1);
+		free(s2);
+		return (NULL);
+	}
+	ft_memcpy(b, s1, s1_len);
+	ft_memcpy(b + s1_len, s2, s2_len + 1);
+	free(s1);
+	free(s2);
+	return (b);
 }
 
 static char	*join(char *line, char *stash)
 {
 	char	*newline;
+	char	*nl;
 
 	newline = get_line(stash);
 	if (!newline)
@@ -58,7 +70,10 @@ static char	*join(char *line, char *stash)
 	line = ft_strjoin_free(line, newline);
 	if (!line)
 		return (NULL);
-	update_stash(stash);
+	nl = ft_strchrnul(stash, '\n');
+	if (*nl == '\n')
+		nl++;
+	ft_strncpy(stash, nl, BUFFER_SIZE);
 	return (line);
 }
 
@@ -80,8 +95,8 @@ char	*get_next_line(int fd)
 	ssize_t		rd;
 
 	line = ft_substr("", 0);
-	if (fd < 0 || BUFFER_SIZE <= 0 || !line)
-		return (NULL);
+	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0 || !line)
+		return (free(line), NULL);
 	rd = 1;
 	while (rd > 0 && *ft_strchrnul(line, '\n') != '\n')
 	{
