@@ -10,7 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line_utils_bonus.h"
+#include "get_next_line_bonus.h"
+#include "get_next_line_utils.h"
 
 char	*ft_strjoin_free(char *s1, char *s2)
 {

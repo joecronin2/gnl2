@@ -12,7 +12,7 @@
 
 #include "get_next_line.h"
 #include "get_next_line_utils.h"
-#include "get_next_line_utils_bonus.h"
+#include "get_next_line_bonus.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
