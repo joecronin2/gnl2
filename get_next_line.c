@@ -6,12 +6,11 @@
 /*   By: jcronin <jcronin@student.codam.nl>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/12 18:17:12 by jcronin           #+#    #+#             */
-/*   Updated: 2026/01/12 18:20:14 by jcronin          ###   ########.fr       */
+/*   Updated: 2026/02/13 02:03:06 by jcronin          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include "get_next_line_utils.h"
 #include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -89,7 +88,7 @@ static ssize_t	read_stash(int fd, char *stash)
 
 char	*get_next_line(int fd)
 {
-	static char	stash[1024][BUFFER_SIZE + 1];
+	static char	stash[BUFFER_SIZE + 1];
 	char		*line;
 	char		*tmp;
 	ssize_t		rd;
@@ -100,13 +99,13 @@ char	*get_next_line(int fd)
 	rd = 1;
 	while (rd > 0 && *ft_strchrnul(line, '\n') != '\n')
 	{
-		if (!*stash[fd])
-			rd = read_stash(fd, stash[fd]);
+		if (!*stash)
+			rd = read_stash(fd, stash);
 		if (rd == -1)
 			return (free(line), NULL);
 		if (rd == 0)
 			break ;
-		tmp = join(line, stash[fd]);
+		tmp = join(line, stash);
 		if (!tmp)
 			return (free(line), NULL);
 		line = tmp;
@@ -118,20 +117,21 @@ char	*get_next_line(int fd)
 
 // #include <fcntl.h>
 // #include <stdio.h>
+// #include <string.h>
 //
 // int	main(void)
 // {
 // 	char	*s;
 //
+// 	int fd = open("testfile", O_RDONLY);
 // 	// int fd = open("testfile", O_RDONLY);
-// 	// int fd = open("testfile", O_RDONLY);
-// 	while ((s = get_next_line(0)))
-// 	{
-// 		// while ((s = get_next_line(fd))) {
-// 		printf("line: %s", s);
+// 	while ((s = get_next_line(0))) {
+// 	// while ((s = get_next_line(fd))) {
+// 		printf("line: %s\nsize: %lu", s, strlen(s));
 // 		free(s);
 // 	}
 // 	// char *s = get_next_line(fd);
 // 	// close(fd);
+// 	(void)fd;
 // 	return (0);
 // }
